@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Page config
-st.set_page_config(page_title="PDF Chatbot", page_icon="📄")
-st.title("📄 PDF Knowledge Chatbot")
+st.set_page_config(page_title="Karachi Info Chatbot", page_icon="📄")
+st.title("📄 Chatbot for Karachi")
 st.caption("Ask me anything from the documents!")
 
 # Load vectorstore
