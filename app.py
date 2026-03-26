@@ -1,25 +1,41 @@
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Page config
-st.set_page_config(page_title="AI Chatbot", page_icon="🤖")
-st.title("🤖 AI Chatbot")
+st.set_page_config(page_title="PDF Chatbot", page_icon="📄")
+st.title("📄 PDF Knowledge Chatbot")
+st.caption("Ask me anything from the documents!")
 
-# Initialize the LLM
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
+# Load vectorstore
+@st.cache_resource
+def load_vectorstore():
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    vectorstore = Chroma(
+        persist_directory="vectorstore",
+        embedding_function=embeddings
+    )
+    return vectorstore
 
-# Initialize chat history in session state
+# Load LLM
+@st.cache_resource
+def load_llm():
+    return ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+
+vectorstore = load_vectorstore()
+llm = load_llm()
+
+# Initialize chat history
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        SystemMessage(content="You are a helpful assistant.")
-    ]
+    st.session_state.messages = []
 
-# Display chat history (skip the system message)
-for msg in st.session_state.messages[1:]:
+# Display chat history
+for msg in st.session_state.messages:
     if isinstance(msg, HumanMessage):
         with st.chat_message("user"):
             st.markdown(msg.content)
@@ -28,17 +44,31 @@ for msg in st.session_state.messages[1:]:
             st.markdown(msg.content)
 
 # Chat input
-if prompt := st.chat_input("Type your message..."):
-    # Add user message
+if prompt := st.chat_input("Ask something from the PDFs..."):
+
+    # Show user message
     st.session_state.messages.append(HumanMessage(content=prompt))
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Get response
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = llm.invoke(st.session_state.messages)
+        with st.spinner("Searching documents..."):
+
+            # Retrieve relevant chunks from vectorstore
+            docs = vectorstore.similarity_search(prompt, k=3)
+            context = "\n\n".join([doc.page_content for doc in docs])
+
+            # Build messages with context injected
+            messages = [
+                SystemMessage(content=f"""You are a helpful assistant. 
+Answer the user's question based ONLY on the context below.
+If the answer is not in the context, say "I don't have information on that in my documents."
+
+Context:
+{context}""")
+            ] + st.session_state.messages
+
+            response = llm.invoke(messages)
             st.markdown(response.content)
 
-    # Save assistant response
     st.session_state.messages.append(AIMessage(content=response.content))
