@@ -63,7 +63,7 @@ with st.sidebar:
     
     st.divider()
     
-    if st.button("🗑️ Clear Chat History"):
+    if st.button("🗑️ Clear Chat History", key="clear_chat"):
         st.session_state.messages = []
         st.rerun()
 
@@ -128,24 +128,24 @@ if not st.session_state.messages:
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📱 Branchless banking accounts in Pakistan?"):
+        if st.button("📱 Branchless banking accounts in Pakistan?", key="q1"):
             st.session_state.suggested = "What is the total number of branchless banking accounts in Pakistan?"
             st.rerun()
-        if st.button("👩 Female financial inclusion rate?"):
+        if st.button("👩 Female financial inclusion rate?", key="q2"):
             st.session_state.suggested = "What is the female financial inclusion rate in Pakistan?"
             st.rerun()
-        if st.button("💰 Pakistan federal budget 2025-26?"):
+        if st.button("💰 Pakistan federal budget 2025-26?", key="q3"):
             st.session_state.suggested = "What is the total federal budget outlay for 2025-26?"
             st.rerun()
     
     with col2:
-        if st.button("📈 How has RAAST grown since launch?"):
+        if st.button("📈 How has RAAST grown since launch?", key="q4"):
             st.session_state.suggested = "How many transactions has RAAST processed since its launch?"
             st.rerun()
-        if st.button("🚧 Barriers to digital savings?"):
+        if st.button("🚧 Barriers to digital savings?", key="q5"):
             st.session_state.suggested = "Why do Pakistanis not use digital savings platforms?"
             st.rerun()
-        if st.button("🏦 Digital payments growth in Pakistan?"):
+        if st.button("🏦 Digital payments growth in Pakistan?", key="q6"):
             st.session_state.suggested = "How did digital payments grow from FY19 to FY25?"
             st.rerun()
     
