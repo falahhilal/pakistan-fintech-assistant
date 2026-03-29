@@ -39,9 +39,6 @@ if not os.path.exists("vectorstore"):
 
 load_dotenv()
 
-# Page config
-st.set_page_config(page_title="Pakistan Fintech Knowledge Assistant", page_icon="🇵🇰")
-
 # Sidebar
 with st.sidebar:
     st.title("🇵🇰 About This App")
