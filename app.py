@@ -11,18 +11,30 @@ load_dotenv()
 # Page config
 st.set_page_config(page_title="Pakistan Fintech Knowledge Assistant", page_icon="🇵🇰")
 
-import streamlit as st
-from langchain_groq import ChatGroq
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
-from dotenv import load_dotenv
-import os
-
+# Auto-build vectorstore if it doesn't exist
 if not os.path.exists("vectorstore"):
-    import subprocess
     with st.spinner("Building knowledge base... (first time only, takes ~2 mins)"):
-        subprocess.run(["python", "ingest.py"])
+        from langchain_community.document_loaders import PyPDFDirectoryLoader
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        from langchain_huggingface import HuggingFaceEmbeddings
+        from langchain_community.vectorstores import Chroma
+
+        loader = PyPDFDirectoryLoader("pdfs/")
+        documents = loader.load()
+
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500,
+            chunk_overlap=50,
+            separators=["\n\n", "\n", " ", ""]
+        )
+        chunks = splitter.split_documents(documents)
+
+        embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
+        vectorstore_build = Chroma.from_documents(
+            chunks,
+            embeddings,
+            persist_directory="vectorstore"
+        )
         st.rerun()
 
 load_dotenv()
