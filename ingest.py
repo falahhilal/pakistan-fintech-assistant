@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
 print("Loading PDFs...")
@@ -21,7 +21,7 @@ print(f"Split into {len(chunks)} chunks")
 
 # 3. Embed and save to ChromaDB
 print("Embedding and saving to ChromaDB...")
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
 vectorstore = Chroma.from_documents(
     chunks,
     embeddings,

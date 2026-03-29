@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
 import os
@@ -28,10 +28,10 @@ with st.sidebar:
     st.divider()
     
     st.markdown("**⚙️ System Info:**")
-    st.markdown("- **LLM:** Llama 3.3 70b")
+    st.markdown("- **LLM:** Llama 3.1 8b Instant")
     st.markdown("- **Provider:** Groq")
     st.markdown("- **Vector DB:** ChromaDB")
-    st.markdown("- **Embeddings:** all-MiniLM-L6-v2")
+    st.markdown("- **Embeddings:** BAAI/bge-base-en-v1.5")
     
     st.divider()
     
@@ -46,7 +46,7 @@ st.caption("Ask questions about Pakistan's financial ecosystem — powered by of
 # Load vectorstore
 @st.cache_resource
 def load_vectorstore():
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
     vectorstore = Chroma(
         persist_directory="vectorstore",
         embedding_function=embeddings
@@ -82,6 +82,8 @@ Return ONLY the rewritten question, nothing else."""),
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "suggested" not in st.session_state:
+    st.session_state.suggested = None
 
 # Display chat history
 for msg in st.session_state.messages:
@@ -92,51 +94,77 @@ for msg in st.session_state.messages:
         with st.chat_message("assistant"):
             st.markdown(msg.content)
 
-# Chat input
-if prompt := st.chat_input("Ask about Pakistan's fintech, payments, budget, or financial inclusion..."):
+# Suggested questions
+if not st.session_state.messages:
+    st.markdown("**💡 Try asking:**")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📱 Branchless banking accounts in Pakistan?"):
+            st.session_state.suggested = "What is the total number of branchless banking accounts in Pakistan?"
+            st.rerun()
+        if st.button("👩 Female financial inclusion rate?"):
+            st.session_state.suggested = "What is the female financial inclusion rate in Pakistan?"
+            st.rerun()
+        if st.button("💰 Pakistan federal budget 2025-26?"):
+            st.session_state.suggested = "What is the total federal budget outlay for 2025-26?"
+            st.rerun()
+    
+    with col2:
+        if st.button("📈 How has RAAST grown since launch?"):
+            st.session_state.suggested = "How many transactions has RAAST processed since its launch?"
+            st.rerun()
+        if st.button("🚧 Barriers to digital savings?"):
+            st.session_state.suggested = "Why do Pakistanis not use digital savings platforms?"
+            st.rerun()
+        if st.button("🏦 Digital payments growth in Pakistan?"):
+            st.session_state.suggested = "How did digital payments grow from FY19 to FY25?"
+            st.rerun()
+    
+    st.divider()
 
-    st.session_state.messages.append(HumanMessage(content=prompt))
+# Handle suggested question or typed input
+user_input = None
+if st.session_state.suggested:
+    user_input = st.session_state.suggested
+    st.session_state.suggested = None
+elif prompt := st.chat_input("Ask about Pakistan's fintech, payments, budget, or financial inclusion..."):
+    user_input = prompt
+
+if user_input:
+    st.session_state.messages.append(HumanMessage(content=user_input))
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_input)
 
     with st.chat_message("assistant"):
         with st.spinner("Searching documents..."):
-
-            # Rewrite query for better retrieval
-            rewritten = rewrite_query(prompt, st.session_state.messages[:-1])
-
-            # Retrieve relevant chunks
+            rewritten = rewrite_query(user_input, st.session_state.messages[:-1])
             docs = vectorstore.similarity_search(rewritten, k=6)
             
-            # Build context with sources
             context_parts = []
             sources = []
             for doc in docs:
                 context_parts.append(doc.page_content)
                 source = doc.metadata.get('source', 'Unknown')
-                # Clean up source path to just filename
                 source = os.path.basename(source)
                 sources.append(source)
 
             context = "\n\n".join(context_parts)
             unique_sources = list(set(sources))
 
-            # Build messages
             messages = [
                 SystemMessage(content=f"""You are a Pakistan fintech and financial data assistant.
 Answer the user's question based ONLY on the context below.
-The context may contain tables with numbers — interpret them carefully.
 If the answer is not clearly in the context, say "I don't have information on that in my documents."
 Be specific and mention actual numbers and figures when available.
 
 Context:
 {context}""")
-            ] + st.session_state.messages
+            ] + st.session_state.messages[-6:]
 
             response = llm.invoke(messages)
             st.markdown(response.content)
 
-            # Show sources
             if unique_sources:
                 st.divider()
                 st.caption(f"📄 Sources: {', '.join(unique_sources)}")
