@@ -26,7 +26,7 @@ if not os.path.exists("vectorstore"):
             separators=["\n\n", "\n", " ", ""]
         )
         chunks = splitter.split_documents(documents)
-        embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         ChromaBuilder.from_documents(chunks, embeddings, persist_directory="vectorstore")
     st.success("Knowledge base built! Reloading...")
     st.rerun()
