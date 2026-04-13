@@ -9,3 +9,4 @@ streamlit==1.40.0
 python-dotenv==1.0.1
 torch==2.2.2
 sentence-transformers==2.6.1
+numpy<2
