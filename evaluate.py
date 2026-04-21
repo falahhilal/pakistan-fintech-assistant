@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load vectorstore and LLM
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
 vectorstore = Chroma(persist_directory="vectorstore", embedding_function=embeddings)
 llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 

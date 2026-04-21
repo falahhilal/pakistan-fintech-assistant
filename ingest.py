@@ -22,7 +22,7 @@ print(f"Split into {len(chunks)} chunks")
 # 3. Embed and save to ChromaDB
 print("Embedding and saving to ChromaDB...")
 embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
+    model_name="BAAI/bge-base-en-v1.5",
     model_kwargs={"device": "cpu"}
 )
 vectorstore = Chroma.from_documents(
