@@ -116,7 +116,7 @@ Return ONLY the rewritten question, nothing else."""),
                 st.session_state.suggested = "What is the female financial inclusion rate in Pakistan?"
                 st.rerun()
             if st.button("💰 Pakistan federal budget 2025-26?", key="q3"):
-                st.session_state.suggested = "What is the total federal budget outlay for 2025-26?"
+                st.session_state.suggested = "What is the PSDP allocation in the federal budget 2025-26?"
                 st.rerun()
         with col2:
             if st.button("📈 How has RAAST grown since launch?", key="q4"):
